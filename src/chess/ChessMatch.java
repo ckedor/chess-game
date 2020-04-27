@@ -1,8 +1,8 @@
 package chess;
 
 import boardgame.Board;
+import boardgame.Piece;
 import boardgame.Position;
-import chess.pieces.King;
 import chess.pieces.Rook;
 
 public class ChessMatch {
@@ -29,9 +29,51 @@ public class ChessMatch {
 		return mat;
 	}
 	
-	private void inicialSetup() {
-		board.placePiece(new Rook(board, Color.WHITE), new Position(2,1));
-		board.placePiece(new King(board, Color.BLACK), new Position(3,1));
+	public boolean[][] possibleMoves(ChessPosition sourcePosition){
+		Position position = sourcePosition.toPosition();
+		validateSourcePosition(position);
+		return board.getPiece(position).possibleMoves();
 	}
+	
+	public ChessPiece performChessMove(ChessPosition sourcePosition, ChessPosition targetPosition) {
+		Position source = sourcePosition.toPosition();
+		Position target = targetPosition.toPosition();
+		validateSourcePosition(source);
+		validateTargetPosition(source, target);
+		Piece capturedPiece = makeMove(source, target);
+		return (ChessPiece)capturedPiece;
+	}
+	
+	private Piece makeMove(Position source, Position target) {
+		Piece p = board.removePiece(source);
+		Piece capturedPiece = board.removePiece(target);
+		board.placePiece(p, target);
+		
+		return capturedPiece;
+		
+	}
+	
+	private void validateSourcePosition(Position pos) {
+		if (!board.positionFull(pos))
+			throw new ChessException("Error performing Chess Move: There is no piece in position " + pos);
+		if (!board.getPiece(pos).isThereAnyPossibleMove()) {
+			throw new ChessException("Error performing Chess Move: There is no possible move for the selected piece");
+		}
+	}
+	
+	private void validateTargetPosition(Position source, Position target) {
+		if (!board.getPiece(source).possibleMove(target))
+			throw new ChessException("Error performing Chess Move: The chosed piece can't move to chosed position");
+	}
+	
+	private void placeNewPiece(char column, int row, ChessPiece piece) {
+		board.placePiece(piece, new ChessPosition(column, row).toPosition());
+	}
+	
+	private void inicialSetup() {
+		placeNewPiece('a', 1, new Rook(board, Color.WHITE));
+	}
+	
+	
 	
 }
